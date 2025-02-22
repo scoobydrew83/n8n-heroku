@@ -2,11 +2,18 @@ FROM n8nio/n8n:latest
 
 USER root
 
-# Install required packages globally with unsafe-perm to avoid permission issues.
-RUN npm install --unsafe-perm -g jsonwebtoken jwks-rsa
+# Create a directory for custom modules.
+RUN mkdir -p /data/custom-modules
+WORKDIR /data/custom-modules
 
-# Set NODE_PATH to include globally installed modules.
-ENV NODE_PATH=/usr/local/lib/node_modules
+# Create a minimal package.json with the required dependencies.
+RUN echo '{"dependencies": {"jsonwebtoken": "^9.0.0", "jwks-rsa": "^3.0.1"}}' > package.json
+
+# Install the dependencies locally in /data/custom-modules/node_modules.
+RUN npm install
+
+# Add the custom modules directory to NODE_PATH so that they can be required in n8n Code nodes.
+ENV NODE_PATH=/data/custom-modules/node_modules:/usr/local/lib/node_modules
 
 WORKDIR /home/node/packages/cli
 ENTRYPOINT []
